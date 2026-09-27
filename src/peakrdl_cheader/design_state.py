@@ -63,5 +63,8 @@ class DesignState:
         self.inst_offset: int
         self.inst_offset = kwargs.pop("inst_offset", 0)
 
+        self.addr_macros: bool
+        self.addr_macros = kwargs.pop("addr_macros", False)
+
         self.testcase: bool
         self.testcase = kwargs.pop("testcase", False)

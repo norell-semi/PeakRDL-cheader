@@ -1,9 +1,9 @@
-from typing import List, TextIO, Set, Match, Union
+from typing import List, TextIO, Set, Match, Union, Optional
 import os
 import re
 
 from systemrdl.walker import RDLListener, RDLWalker
-from systemrdl.node import AddrmapNode, RegNode, AddressableNode, MemNode, RegfileNode
+from systemrdl.node import AddrmapNode, RegNode, AddressableNode, MemNode, RegfileNode, Node
 
 from .design_state import DesignState
 from . import utils
@@ -116,7 +116,7 @@ class OffsetTestsGenerator(RDLListener):
             return kwf(m.group(0))
         member = re.sub(r"\w+", kwrepl, member)
 
-        if self.ds.generate_bitfields:
+        if utils.reg_has_bitfields(self.ds, node):
             # Reg is defined as a bitfield union. Access entire word member
             member += ".w"
 
@@ -131,6 +131,26 @@ class OffsetTestsGenerator(RDLListener):
                 self.write(f"assert(offsetof({self.root_struct_name}, {member}[{i}]) == {addr});\n")
         else:
             self.write(f"assert(offsetof({self.root_struct_name}, {member}) == {node_addr:#x}UL);\n")
+
+        if self.ds.addr_macros:
+            self.write_addr_macro_test(node)
+
+    def write_addr_macro_test(self, node: RegNode) -> None:
+        idxs: List[int] = []
+        current: Optional[Node] = node
+        while current is not None:
+            if isinstance(current, AddressableNode) and current.is_array:
+                assert current.current_idx is not None
+                idxs = list(current.current_idx) + idxs
+            if current is self.root_node:
+                break
+            current = current.parent
+
+        macro = utils.get_reg_addr_macro_name(self.root_node, node)
+        if idxs:
+            macro += "(" + ", ".join(str(i) for i in idxs) + ")"
+        addr = node.absolute_address + self.ds.inst_offset
+        self.write(f"assert({macro} == {addr:#x}UL);\n")
 
 
 
@@ -174,6 +194,9 @@ class BitfieldTestsGenerator(RDLListener):
 
 
     def enter_Reg(self, node: RegNode) -> None:
+        if not utils.reg_has_bitfields(self.ds, node):
+            return
+
         union_name = utils.get_struct_name(self.ds, self.root_node, node)
         if union_name in self.defined_namespace:
             # Already tested. Skip
@@ -204,7 +227,7 @@ class BitfieldTestsGenerator(RDLListener):
         self.write(f"{union_name} reg;\n")
         for grp_name, fields in zip(["f", "fr", "fw"], [f_fields, fr_fields, fw_fields]):
             for field in fields:
-                field_prefix = prefix + "__" + field.inst_name.upper()
+                field_prefix = utils.get_field_prefix(prefix, field)
                 self.write("reg.w = 0;\n")
                 self.write(f"reg.{grp_name}.{kwf(field.inst_name)} = {(1 << field.width) - 1:#x};\n")
                 self.write(f"assert(reg.w == {field_prefix}_bm);\n")

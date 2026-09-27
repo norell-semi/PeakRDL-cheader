@@ -17,6 +17,7 @@ files = [file for file in files if not file in exceptions]
     "reuse_typedefs": [True, False],
     "explode_top": [True, False],
     "instantiate": [True, False],
+    "addr_macros": [True, False],
 }))
 class TestAll(base.BaseHeaderTestcase):
     def test_all(self) -> None:

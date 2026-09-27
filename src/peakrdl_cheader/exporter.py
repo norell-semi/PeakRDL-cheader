@@ -51,6 +51,11 @@ class CHeaderExporter:
             block at a defined hardware address, allowing for direct access.
         inst_offset: int
             Apply an additional address offset to instance definitions.
+        addr_macros: bool
+            If set, header will also include a ``<PATH>_addr`` macro for every
+            register instance that evaluates to its absolute address, including
+            ``inst_offset``. Registers within arrays get function-like macros that
+            take one index argument per array dimension.
         testcase: bool
             Generate a testcase C file
         """

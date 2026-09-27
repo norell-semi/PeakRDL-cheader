@@ -1,0 +1,35 @@
+property anonymous {
+    type = boolean;
+    component = field;
+    default = true;
+};
+
+addrmap anonymous {
+    reg {
+        field {sw=rw; hw=r; anonymous;} EPID[31:0] = 0x1234;
+    } EPID;
+
+    reg {
+        field {sw=r; hw=w; anonymous;} value[15:4];
+    } STATUS;
+
+    reg {
+        field {sw=rw; hw=r; anonymous;} x[7:0] = 0;
+    } CFG[4];
+
+    reg {
+        regwidth = 128;
+        field {sw=r; hw=w; anonymous;} v[127:0];
+    } WIDE;
+
+    regfile {
+        reg {
+            field {sw=rw; hw=r; anonymous;} y[15:0] = 0xAA;
+        } R;
+    } rf[2];
+
+    reg {
+        field {sw=rw; hw=r;} a[7:0] = 0;
+        field {sw=rw; hw=r;} b[15:8] = 0;
+    } NORMAL;
+};

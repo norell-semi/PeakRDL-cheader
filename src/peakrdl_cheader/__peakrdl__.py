@@ -18,6 +18,7 @@ class Exporter(ExporterSubcommandPlugin):
         "type_style": schema.Choice(['lexical', 'hier']),
         "subword_size": schema.Integer(),
         "bitfields": schema.Choice(["ltoh", "htol", "none"]),
+        "addr_macros": schema.Boolean(),
     }
 
     def add_exporter_arguments(self, arg_group: 'argparse._ActionsContainer') -> None:
@@ -89,6 +90,18 @@ class Exporter(ExporterSubcommandPlugin):
         )
 
         arg_group.add_argument(
+            "--addr-macros",
+            action="store_true",
+            default=False,
+            help="""
+            If set, header will also include a macro for every register that
+            evaluates to its absolute address (including --inst-offset).
+            Registers within arrays get function-like macros that take one index
+            argument per array dimension.
+            """
+        )
+
+        arg_group.add_argument(
             "--type-style",
             dest="type_style",
             choices=['lexical', 'hier'],
@@ -147,5 +160,6 @@ class Exporter(ExporterSubcommandPlugin):
             explode_top=options.explode_top,
             instantiate=options.instantiate,
             inst_offset=options.inst_offset,
+            addr_macros=options.addr_macros or bool(self.cfg['addr_macros']),
             testcase=options.testcase,
         )

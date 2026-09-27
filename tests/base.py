@@ -25,6 +25,8 @@ class BaseHeaderTestcase(TestCase):
     wide_reg_subword_size = 32
     explode_top = False
     instantiate = False
+    inst_offset = 0
+    addr_macros = False
 
     @classmethod
     def get_run_dir(cls) -> str:
@@ -70,7 +72,8 @@ class BaseHeaderTestcase(TestCase):
             wide_reg_subword_size=self.wide_reg_subword_size,
             explode_top=self.explode_top,
             instantiate=self.instantiate,
-            inst_offset=0,
+            inst_offset=self.inst_offset,
+            addr_macros=self.addr_macros,
             testcase=True,
         )
 

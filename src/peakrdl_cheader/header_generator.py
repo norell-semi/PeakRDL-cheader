@@ -41,6 +41,12 @@ class HeaderGenerator(RDLListener):
                 self.root_node = node
                 RDLWalker().walk(node, self)
 
+            if self.ds.addr_macros:
+                f.write("\n// Register addresses\n")
+                for node in top_nodes:
+                    for reg in utils.get_all_regs(node):
+                        f.write(utils.get_reg_addr_macro(self.ds, node, reg) + "\n")
+
             # Write direct instance definitions
             if self.ds.instantiate:
                 f.write("\n// Instances\n")
@@ -137,7 +143,7 @@ class HeaderGenerator(RDLListener):
         self.write(f"\n// {self.get_friendly_name(node)}\n")
 
         for field in node.fields():
-            field_prefix = prefix + "__" + field.inst_name.upper()
+            field_prefix = utils.get_field_prefix(prefix, field)
 
             bm = ((1 << field.width) - 1) << field.low
             self.write(f"#define {field_prefix}_bm {bm:#x}\n")
@@ -153,7 +159,7 @@ class HeaderGenerator(RDLListener):
 
 
     def exit_Reg(self, node: RegNode) -> None:
-        if not self.ds.generate_bitfields:
+        if not utils.reg_has_bitfields(self.ds, node):
             return
 
         union_name = self.get_struct_name(node)
@@ -322,7 +328,7 @@ class HeaderGenerator(RDLListener):
         else:
             array_suffix = ""
 
-        if self.ds.generate_bitfields:
+        if utils.reg_has_bitfields(self.ds, node):
             struct_name = self.get_struct_name(node)
             self.write(f"{struct_name} {kwf(node.inst_name)}{array_suffix};\n")
         else:

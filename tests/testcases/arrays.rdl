@@ -1,0 +1,20 @@
+addrmap arrays {
+    reg r_t {
+        field {sw=rw; hw=r;} f[31:0] = 0;
+    };
+
+    r_t single @ 0x0;
+    r_t vec[4] @ 0x10;
+    r_t grid[2][3] @ 0x40;
+
+    regfile {
+        r_t a;
+        r_t b[2];
+    } rf[3] @ 0x100 += 0x20;
+
+    regfile {
+        regfile {
+            r_t c[2];
+        } inner[2][2] += 0x10;
+    } outer[2] @ 0x200 += 0x100;
+};
